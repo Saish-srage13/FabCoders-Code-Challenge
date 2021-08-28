@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -o allexport
+source .env
+set +o allexport
+
+if [ $# -gt 0 ]; then
+
+    if [ "$1" == "start" ]; then
+        docker-compose up -d
+
+    elif [ "$1" == "stop" ]; then
+        docker-compose down
+
+    elif [ "$1" == "artisan" ]; then
+        shift 1
+        docker-compose exec \
+            app \
+            php artisan "$@"
+
+    elif [ "$1" == "composer" ]; then
+        shift 1
+        docker-compose exec \
+            app \
+            composer "$@"
+
+    elif [ "$1" == "importdb" ]; then
+        shift 1
+        docker exec -i \
+        $(docker-compose ps -q db) \
+        mysql -u$DB_USERNAME -p$DB_PASSWORD $DB_DATABASE < "$@"
+
+    elif [ "$1" == "test" ]; then
+        shift 1
+        docker-compose exec \
+            app \
+            ./vendor/bin/phpunit "$@"
+    else
+        docker-compose "$@"
+    fi
+
+else
+    docker-compose ps
+fi
